@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useMutation } from '@apollo/client/react'
+import { CREATE_BOOK,ALL_AUTHORS,ALL_BOOKS} from '../queries'
 
 const NewBook = (props) => {
   const [title, setTitle] = useState('')
@@ -7,6 +9,14 @@ const NewBook = (props) => {
   const [genre, setGenre] = useState('')
   const [genres, setGenres] = useState([])
 
+  const [createBook] = useMutation(CREATE_BOOK,{
+    refetchQueries:[
+      {query:ALL_BOOKS},
+      {query:ALL_AUTHORS}
+    ],
+   onError:(error)=>{ throw error}
+  })
+
   if (!props.show) {
     return null
   }
@@ -14,7 +24,7 @@ const NewBook = (props) => {
   const submit = async (event) => {
     event.preventDefault()
 
-    console.log('add book...')
+    createBook({variables:{title,author,published,genres}})
 
     setTitle('')
     setPublished('')
@@ -31,29 +41,29 @@ const NewBook = (props) => {
   return (
     <div>
       <form onSubmit={submit}>
-        <div>
+        <label>
           title
           <input
             value={title}
             onChange={({ target }) => setTitle(target.value)}
           />
-        </div>
-        <div>
+        </label>
+        <label>
           author
           <input
             value={author}
             onChange={({ target }) => setAuthor(target.value)}
           />
-        </div>
-        <div>
+        </label>
+        <label>
           published
           <input
             type="number"
             value={published}
-            onChange={({ target }) => setPublished(target.value)}
+            onChange={({ target }) => setPublished(Number(target.value))}
           />
-        </div>
-        <div>
+        </label>
+        <label>
           <input
             value={genre}
             onChange={({ target }) => setGenre(target.value)}
@@ -61,7 +71,7 @@ const NewBook = (props) => {
           <button onClick={addGenre} type="button">
             add genre
           </button>
-        </div>
+        </label>
         <div>genres: {genres.join(' ')}</div>
         <button type="submit">create book</button>
       </form>
