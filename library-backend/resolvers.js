@@ -81,7 +81,17 @@ const resolvers = {
             }
         },
 
-        addBook: async (root, args) => {
+        addBook: async (root, args, context) => {
+            const currentUser = context.currentUser
+
+            if (!currentUser) {
+                throw new GraphQLError('not authenticated', {
+                    extensions: {
+                        code: 'UNAUTHENTICATED',
+                    },
+                })
+            }
+
             try {
                 let author = await Author.findOne({ name: args.author })
 
@@ -95,7 +105,8 @@ const resolvers = {
                     author: author._id
                 })
 
-                return await book.save()
+                await book.save()
+                return book.populate('author')
             } catch (error) {
                 throw new GraphQLError(error.message, {
                     extensions: {
@@ -105,9 +116,20 @@ const resolvers = {
             }
         },
 
-        editAuthor: async (root, args) => {
+        editAuthor: async (root, args, context) => {
+            const currentUser = context.currentUser
+
+            if (!currentUser) {
+                throw new GraphQLError('not authenticated', {
+                    extensions: {
+                        code: 'UNAUTHENTICATED',
+                    },
+                })
+            }
+
             try {
                 const author = await Author.findOne({ name: args.name })
+
                 if (!author) {
                     return null
                 }
@@ -123,7 +145,8 @@ const resolvers = {
                 })
             }
         },
-        
+
+
         _resetDatabase: async () => {
             if (process.env.NODE_ENV !== 'test') {
                 throw new GraphQLError('_resetDatabase is only available in test mode')
