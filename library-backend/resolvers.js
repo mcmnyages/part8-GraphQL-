@@ -1,3 +1,4 @@
+const { GraphQLError } = require('graphql')
 const Author = require('./models/author')
 const Book = require('./models/book')
 
@@ -30,27 +31,47 @@ const resolvers = {
     },
     Mutation: {
         addBook: async (root, args) => {
-            let author = await Author.findOne({ name: args.author })
+            try {
+                let author = await Author.findOne({ name: args.author })
 
-            if (!author) {
-                author = new Author({ name: args.author })
-                await author.save()
+                if (!author) {
+                    author = new Author({ name: args.author })
+                    await author.save()
+                }
+
+                const book = new Book({
+                    ...args,
+                    author: author._id
+                })
+
+                return await book.save()
+            } catch (error) {
+                throw new GraphQLError(error.message, {
+                    extensions: {
+                        code: 'BAD_USER_INPUT'
+                    }
+                })
             }
-
-            const book = new Book({ ...args, author: author._id })
-            return book.save()
         },
-
         editAuthor: async (root, args) => {
-            let author = await Author.findOne({ name: args.name })
+            try {
+                const author = await Author.findOne({ name: args.name })
+                if (!author) {
+                    return null
+                }
+                
+                author.born = args.setBornTo
 
-            if (!author) {
-                return null
+                return await author.save()
+            } catch (error) {
+                throw new GraphQLError(error.message, {
+                    extensions: {
+                        code: 'BAD_USER_INPUT'
+                    }
+                })
             }
-
-            author.born = args.setBornTo
-            return author.save()
         }
+
     }
 }
 
