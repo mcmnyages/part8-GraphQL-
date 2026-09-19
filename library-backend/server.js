@@ -8,7 +8,6 @@ const resolvers = require('./resolvers')
 const User = require('./models/user')
 
 const getUserFromAuthHeader = async (auth) => {
-  console.log(auth)
   if (!auth || !auth.startsWith('Bearer ')) {
     return null
   }
