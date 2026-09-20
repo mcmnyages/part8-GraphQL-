@@ -51,7 +51,7 @@ const Authors = (props) => {
         </tbody>
       </table>
       <div>
-        <form onSubmit={handleSubmit}>
+        {props.token &&<form onSubmit={handleSubmit}>
           <div>
             <label>
               name:
@@ -77,6 +77,7 @@ const Authors = (props) => {
           </div>
           <button type="submit">Update author</button>
         </form>
+        }
       </div>
     </div>
   )
