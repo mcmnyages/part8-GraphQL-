@@ -10,16 +10,23 @@ query{
   }
 }`
 
-export const ALL_BOOKS = gql `
-query{
-  allBooks {
-    id
-    title
-    published
-    author
+export const ALL_BOOKS = gql`
+  query ($author: String, $genre:String) {
+    allBooks(author: $author, genre:$genre) {
+      id
+      title
+      published
+      genres
+      author {
+        id
+        name
+        born
+        bookCount
+      }
+    }
   }
-}
 `
+
 
 export const CREATE_BOOK = gql`
   mutation createBook(
