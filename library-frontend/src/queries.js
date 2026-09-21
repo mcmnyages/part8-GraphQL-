@@ -43,12 +43,19 @@ export const CREATE_BOOK = gql`
     ) {
       id
       title
-      author
+      author {
+      name
+      bookCount
+      id
+      born
+    }
       published
       genres
     }
   }
 `
+
+
 
 export const EDIT_AUTHOR = gql`
   mutation editAuthor(
@@ -72,3 +79,12 @@ export const LOGIN = gql`
     }
   }
 `
+
+export const ME = gql `
+query{
+  me {
+    username
+    favoriteGenre
+    id
+  }
+}`
