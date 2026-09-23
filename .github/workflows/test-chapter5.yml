@@ -1,7 +1,7 @@
 name: E2E tests (library)
 
 on:
-  # push:
+  push:
     branches: [ main, master ]
   workflow_dispatch:
 
