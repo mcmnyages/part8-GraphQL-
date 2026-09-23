@@ -2,7 +2,6 @@ import { ALL_BOOKS } from "../queries";
 import { useQuery } from "@apollo/client/react";
 
 const Recommendations = (props) => {
-    console.log('me',props.me)
   const favorite = props.me?.favoriteGenre
     const response = useQuery(ALL_BOOKS, {
         variables: { genre: favorite },
