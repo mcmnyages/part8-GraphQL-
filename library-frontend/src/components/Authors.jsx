@@ -51,11 +51,16 @@ const Authors = (props) => {
         </tbody>
       </table>
       <div>
-        {props.token &&<form onSubmit={handleSubmit}>
+        {props.token && <form onSubmit={handleSubmit}>
+          <h3>Set birthyear</h3>
           <div>
             <label>
               name:
-              <select value={name} onChange={({ target }) => setName(target.value)}>
+              <select
+                name="name"
+                value={name}
+                onChange={({ target }) => setName(target.value)}
+              >
                 <option value="">Select author</option>
                 {authors.map(author => (
                   <option key={author.id} value={author.name}>
@@ -63,8 +68,8 @@ const Authors = (props) => {
                   </option>
                 ))}
               </select>
-
             </label>
+
           </div>
           <div>
             <label >

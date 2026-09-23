@@ -24,7 +24,7 @@ const Recommendations = (props) => {
     return (
         <div>
             <h3>recommendations</h3>
-            <p>books in your favourite genre <b>{favorite}</b></p>
+            <p>books in your favorite genre <b>{favorite}</b></p>
             <table>
                 <tbody>
                     <tr>

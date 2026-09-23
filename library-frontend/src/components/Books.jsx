@@ -18,6 +18,7 @@ const Books = (props) => {
   }
 
   if (response.error) {
+    console.log(response.error)
     return <div>Error loading books!</div>;
   }
 

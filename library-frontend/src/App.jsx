@@ -6,14 +6,18 @@ import Authors from './components/Authors'
 import Books from './components/Books'
 import NewBook from './components/NewBook'
 import LoginForm from './components/LoginForm'
+import Notify from './components/Notify'
 import Recommendations from './components/Recommendations'
 import { useToken, useLogout } from './useUserStore'
 
 const App = () => {
+  const [errorMessage,setErrorMessage]=useState(null)
   const [page, setPage] = useState('authors')
   const client = useApolloClient()
   const token = useToken()
   const logoutUser = useLogout()
+
+
   const response = useQuery(ME, {
     skip: !token
   })
@@ -23,8 +27,16 @@ const App = () => {
   }
 
   const me = response.data?.me
+
+ const notify = (message) => {
+    setErrorMessage(message)
+    setTimeout(() => {
+      setErrorMessage(null)
+    }, 10000)
+  }
+
   const onLogout = async () => {
-    await logoutUser(client) // Now safely passes client to reset the Apollo cache
+    await logoutUser(client) 
     setPage('authors')
   }
 
@@ -47,14 +59,14 @@ const App = () => {
           <button onClick={onLogout}>logout </button>
         )}
       </div>
-
-      <Authors show={page === 'authors'} />
-      <Books show={page === 'books'} />
-      <NewBook show={page === 'add'} />
+      <Notify errorMessage={errorMessage}/>
+      <Authors show={page === 'authors'} token={token}/>
+      <Books show={page === 'books'} setError={notify}/>
+      <NewBook show={page === 'add'} setError={notify}/>
       <Recommendations show={page === 'recommendations'} me={me} />
 
       {page === 'login' && (
-        <LoginForm setPage={setPage}/>
+        <LoginForm setPage={setPage} setError={notify}/>
       )}
     </div>
   )
