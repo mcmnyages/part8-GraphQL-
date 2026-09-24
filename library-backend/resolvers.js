@@ -1,10 +1,10 @@
 const { GraphQLError } = require('graphql')
 const jwt = require('jsonwebtoken')
+const { PubSub } = require('graphql-subscriptions')
 
 const Author = require('./models/author')
 const Book = require('./models/book')
 const User = require('./models/user')
-const { PubSub } = require('graphql-subscriptions')
 
 const pubsub = new PubSub()
 
@@ -23,7 +23,7 @@ const resolvers = {
         },
 
         allBooks: async (root, args) => {
-            let query = {}
+            const query = {}
 
             if (args.author) {
                 const author = await Author.findOne({ name: args.author })
@@ -48,10 +48,8 @@ const resolvers = {
     },
 
     Author: {
-        bookCount: async (root) => {
-            return Book.countDocuments({
-                author: root._id,
-            })
+        bookCount: async (author) => {
+            return Book.countDocuments({ author: author._id })
         },
     },
 
@@ -65,23 +63,18 @@ const resolvers = {
 
                 return await user.save()
             } catch (error) {
-                throw new GraphQLError(
-                    `Creating the user failed: ${error.message}`,
-                    {
-                        extensions: {
-                            code: 'BAD_USER_INPUT',
-                            invalidArgs: args.username,
-                            error,
-                        },
-                    }
-                )
+                throw new GraphQLError(`Creating the user failed: ${error.message}`, {
+                    extensions: {
+                        code: 'BAD_USER_INPUT',
+                        invalidArgs: args.username,
+                        error,
+                    },
+                })
             }
         },
 
         login: async (root, args) => {
-            const user = await User.findOne({
-                username: args.username,
-            })
+            const user = await User.findOne({ username: args.username })
 
             if (!user || args.password !== 'secret') {
                 throw new GraphQLError('wrong credentials', {
@@ -96,18 +89,13 @@ const resolvers = {
                 id: user._id,
             }
 
-            return {
-                value: jwt.sign(
-                    userForToken,
-                    process.env.JWT_SECRET
-                ),
-            }
+            const token = jwt.sign(userForToken, process.env.JWT_SECRET)
+
+            return { value: token }
         },
 
         addBook: async (root, args, context) => {
-            const currentUser = context.currentUser
-
-            if (!currentUser) {
+            if (!context.currentUser) {
                 throw new GraphQLError('not authenticated', {
                     extensions: {
                         code: 'UNAUTHENTICATED',
@@ -116,15 +104,10 @@ const resolvers = {
             }
 
             try {
-                let author = await Author.findOne({
-                    name: args.author,
-                })
+                let author = await Author.findOne({ name: args.author })
 
                 if (!author) {
-                    author = new Author({
-                        name: args.author,
-                    })
-
+                    author = new Author({ name: args.author })
                     await author.save()
                 }
 
@@ -134,13 +117,13 @@ const resolvers = {
                 })
 
                 await book.save()
-
                 const populatedBook = await book.populate('author')
 
-                await pubsub.publish('BOOK_ADDED', {bookAdded: populatedBook,})
+                await pubsub.publish('BOOK_ADDED', {
+                    bookAdded: populatedBook,
+                })
 
                 return populatedBook
-
             } catch (error) {
                 throw new GraphQLError(error.message, {
                     extensions: {
@@ -151,9 +134,7 @@ const resolvers = {
         },
 
         editAuthor: async (root, args, context) => {
-            const currentUser = context.currentUser
-
-            if (!currentUser) {
+            if (!context.currentUser) {
                 throw new GraphQLError('not authenticated', {
                     extensions: {
                         code: 'UNAUTHENTICATED',
@@ -162,16 +143,13 @@ const resolvers = {
             }
 
             try {
-                const author = await Author.findOne({
-                    name: args.name,
-                })
+                const author = await Author.findOne({ name: args.name })
 
                 if (!author) {
                     return null
                 }
 
                 author.born = args.setBornTo
-
                 return await author.save()
             } catch (error) {
                 throw new GraphQLError(error.message, {
@@ -184,9 +162,7 @@ const resolvers = {
 
         _resetDatabase: async () => {
             if (process.env.NODE_ENV !== 'test') {
-                throw new GraphQLError(
-                    '_resetDatabase is only available in test mode'
-                )
+                throw new GraphQLError('_resetDatabase is only available in test mode')
             }
 
             await Author.deleteMany({})
@@ -204,7 +180,6 @@ const resolvers = {
             },
         },
     },
-
 }
 
 module.exports = resolvers
