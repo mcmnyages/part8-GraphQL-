@@ -1,66 +1,68 @@
-const typeDefs = /* GraphQL */`
+const typeDefs = /* GraphQL */ `
 
   type User {
     username: String!
     favoriteGenre: String!
     id: ID!
-   }
+  }
 
-    type Token {
-      value: String!
-    }
+  type Token {
+    value: String!
+  }
 
-    type Author{
-      id:ID!
-      name:String!,
-      born:Int
-      bookCount:Int!
-    }
+  type Author {
+    id: ID!
+    name: String!
+    born: Int
+    bookCount: Int!
+  }
 
-    type Book {
+  type Book {
     title: String!
     published: Int!
     author: Author!
     genres: [String!]!
     id: ID!
- }
+  }
 
-    type Query{
-        me: User
-      bookCount:Int!
-      authorCount:Int!
-      allBooks(author:String, genre:String):[Book!]
-      allAuthors:[Author!]!
-    }
+  type Query {
+    me: User
+    bookCount: Int!
+    authorCount: Int!
+    allBooks(author: String, genre: String): [Book!]
+    allAuthors: [Author!]!
+  }
 
- type  Mutation {
+  type Mutation {
+    createUser(
+      username: String!
+      favoriteGenre: String!
+    ): User
 
-  createUser(
-    username: String!
-    favoriteGenre: String!
-  ): User
+    login(
+      username: String!
+      password: String!
+    ): Token
 
-  login(
-    username: String!
-    password: String!
-  ): Token
-  
-  addBook(
-    title: String!
-    author: String!
-    published:Int!
-    genres: [String!]
-  ):Book
+    addBook(
+      title: String!
+      author: String!
+      published: Int!
+      genres: [String!]
+    ): Book
 
-  editAuthor(
-    name:String
-    setBornTo:Int
-  ):Author
+    editAuthor(
+      name: String
+      setBornTo: Int
+    ): Author
 
-   _resetDatabase: Boolean
+    _resetDatabase: Boolean
+  }
 
-}
-  
+  type Subscription {
+    bookAdded: Book!
+  }
+
 `
 
 module.exports = typeDefs

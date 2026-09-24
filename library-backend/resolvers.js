@@ -4,39 +4,55 @@ const jwt = require('jsonwebtoken')
 const Author = require('./models/author')
 const Book = require('./models/book')
 const User = require('./models/user')
+const { PubSub } = require('graphql-subscriptions')
 
-
+const pubsub = new PubSub()
 
 const resolvers = {
     Query: {
         me: (root, args, context) => {
             return context.currentUser
         },
-        bookCount: async () => Book.collection.countDocuments(),
-        authorCount: async () => Author.collection.countDocuments(),
+
+        bookCount: async () => {
+            return Book.collection.countDocuments()
+        },
+
+        authorCount: async () => {
+            return Author.collection.countDocuments()
+        },
+
         allBooks: async (root, args) => {
             let query = {}
 
             if (args.author) {
                 const author = await Author.findOne({ name: args.author })
+
                 if (!author) {
                     return []
                 }
+
                 query.author = author._id
             }
 
             if (args.genre) {
                 query.genres = args.genre
             }
+
             return Book.find(query).populate('author')
         },
-        allAuthors: async () => Author.find({})
+
+        allAuthors: async () => {
+            return Author.find({})
+        },
     },
 
     Author: {
         bookCount: async (root) => {
-            return Book.countDocuments({ author: root._id })
-        }
+            return Book.countDocuments({
+                author: root._id,
+            })
+        },
     },
 
     Mutation: {
@@ -47,21 +63,25 @@ const resolvers = {
                     favoriteGenre: args.favoriteGenre,
                 })
 
-                return user.save()
+                return await user.save()
             } catch (error) {
-                throw new GraphQLError(`Creating the user failed: ${error.message}`, {
-                    extensions: {
-                        code: 'BAD_USER_INPUT',
-                        invalidArgs: args.username,
-                        error,
-                    },
-                })
+                throw new GraphQLError(
+                    `Creating the user failed: ${error.message}`,
+                    {
+                        extensions: {
+                            code: 'BAD_USER_INPUT',
+                            invalidArgs: args.username,
+                            error,
+                        },
+                    }
+                )
             }
-
         },
 
         login: async (root, args) => {
-            const user = await User.findOne({ username: args.username })
+            const user = await User.findOne({
+                username: args.username,
+            })
 
             if (!user || args.password !== 'secret') {
                 throw new GraphQLError('wrong credentials', {
@@ -77,7 +97,10 @@ const resolvers = {
             }
 
             return {
-                value: jwt.sign(userForToken, process.env.JWT_SECRET),
+                value: jwt.sign(
+                    userForToken,
+                    process.env.JWT_SECRET
+                ),
             }
         },
 
@@ -93,25 +116,36 @@ const resolvers = {
             }
 
             try {
-                let author = await Author.findOne({ name: args.author })
+                let author = await Author.findOne({
+                    name: args.author,
+                })
 
                 if (!author) {
-                    author = new Author({ name: args.author })
+                    author = new Author({
+                        name: args.author,
+                    })
+
                     await author.save()
                 }
 
                 const book = new Book({
                     ...args,
-                    author: author._id
+                    author: author._id,
                 })
 
                 await book.save()
-                return book.populate('author')
+
+                const populatedBook = await book.populate('author')
+
+                await pubsub.publish('BOOK_ADDED', {bookAdded: populatedBook,})
+
+                return populatedBook
+
             } catch (error) {
                 throw new GraphQLError(error.message, {
                     extensions: {
-                        code: 'BAD_USER_INPUT'
-                    }
+                        code: 'BAD_USER_INPUT',
+                    },
                 })
             }
         },
@@ -128,7 +162,9 @@ const resolvers = {
             }
 
             try {
-                const author = await Author.findOne({ name: args.name })
+                const author = await Author.findOne({
+                    name: args.name,
+                })
 
                 if (!author) {
                     return null
@@ -140,24 +176,35 @@ const resolvers = {
             } catch (error) {
                 throw new GraphQLError(error.message, {
                     extensions: {
-                        code: 'BAD_USER_INPUT'
-                    }
+                        code: 'BAD_USER_INPUT',
+                    },
                 })
             }
         },
 
-
         _resetDatabase: async () => {
             if (process.env.NODE_ENV !== 'test') {
-                throw new GraphQLError('_resetDatabase is only available in test mode')
+                throw new GraphQLError(
+                    '_resetDatabase is only available in test mode'
+                )
             }
+
             await Author.deleteMany({})
             await Book.deleteMany({})
             await User.deleteMany({})
+
             return true
         },
+    },
 
-    }
+    Subscription: {
+        bookAdded: {
+            subscribe: () => {
+                return pubsub.asyncIterableIterator('BOOK_ADDED')
+            },
+        },
+    },
+
 }
 
 module.exports = resolvers
