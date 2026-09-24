@@ -1,32 +1,44 @@
 import { gql } from "@apollo/client"
 
-export const ALL_AUTHORS = gql`
-query{
-  allAuthors {
+export const AUTHOR_DETAILS = gql`
+  fragment AuthorDetails on Author {
     id
-    bookCount
     name
     born
-  }
-}`
-
-export const ALL_BOOKS = gql`
-  query ($author: String, $genre:String) {
-    allBooks(author: $author, genre:$genre) {
-      id
-      title
-      published
-      genres
-      author {
-        id
-        name
-        born
-        bookCount
-      }
-    }
+    bookCount
   }
 `
 
+export const BOOK_DETAILS = gql`
+  fragment BookDetails on Book {
+    id
+    title
+    published
+    genres
+    author {
+      ...AuthorDetails
+    }
+  }
+  ${AUTHOR_DETAILS}
+`
+
+export const ALL_AUTHORS = gql`
+  query {
+    allAuthors {
+      ...AuthorDetails
+    }
+  }
+  ${AUTHOR_DETAILS}
+`
+
+export const ALL_BOOKS = gql`
+  query ($author: String, $genre: String) {
+    allBooks(author: $author, genre: $genre) {
+      ...BookDetails
+    }
+  }
+  ${BOOK_DETAILS}
+`
 
 export const CREATE_BOOK = gql`
   mutation createBook(
@@ -41,32 +53,37 @@ export const CREATE_BOOK = gql`
       published: $published
       genres: $genres
     ) {
-      id
-      title
-      author {
-      name
-      bookCount
-      id
-      born
+      ...BookDetails
     }
+  }
+  ${BOOK_DETAILS}
+`
+
+export const BOOK_ADDED = gql`
+  subscription {
+    bookAdded {
+      title
       published
       genres
+      author {
+        name
+      }
+      id
     }
   }
 `
 
 
-
 export const EDIT_AUTHOR = gql`
   mutation editAuthor(
-   $name:String!,
-   $setBornTo:Int!
+    $name: String!
+    $setBornTo: Int!
   ) {
     editAuthor(
-      name:$name
-      setBornTo:$setBornTo
+      name: $name
+      setBornTo: $setBornTo
     ) {
-      name,
+      name
       born
     }
   }
@@ -74,17 +91,18 @@ export const EDIT_AUTHOR = gql`
 
 export const LOGIN = gql`
   mutation login($username: String!, $password: String!) {
-    login(username: $username, password: $password)  {
+    login(username: $username, password: $password) {
       value
     }
   }
 `
 
-export const ME = gql `
-query{
-  me {
-    username
-    favoriteGenre
-    id
+export const ME = gql`
+  query {
+    me {
+      username
+      favoriteGenre
+      id
+    }
   }
-}`
+`

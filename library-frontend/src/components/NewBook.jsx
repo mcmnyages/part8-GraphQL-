@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useMutation } from '@apollo/client/react'
-import { CREATE_BOOK, ALL_AUTHORS, ALL_BOOKS } from '../queries'
+import { useMutation} from '@apollo/client/react'
+import { CREATE_BOOK, BOOK_ADDED, ALL_BOOKS } from '../queries'
 import { bookToAdd, authorToAdd } from '../utils/apolloCache'
 
 
@@ -21,6 +21,7 @@ const NewBook = (props) => {
       console.error(error)
     },
   })
+
 
   if (!props.show) {
     return null
