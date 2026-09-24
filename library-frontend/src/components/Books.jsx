@@ -10,7 +10,7 @@ const Books = (props) => {
     variables: { genre: selectedGenre === 'all' ? null : selectedGenre },
   });
 
-  const sub = useSubscription(BOOK_ADDED, {
+  useSubscription(BOOK_ADDED, {
     onData: ({ data }) => {
       const newBook = data.data.bookAdded
       const variables = { genre: selectedGenre === 'all' ? null : selectedGenre, }
@@ -24,7 +24,6 @@ const Books = (props) => {
 
     }
   })
-console.log('Sub',sub)
 
 
   if (!props.show) {
