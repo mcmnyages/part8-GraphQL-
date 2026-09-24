@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { useApolloClient, useQuery,useSubscription } from '@apollo/client/react'
-
+import { useApolloClient, useQuery} from '@apollo/client/react'
 import { ME, BOOK_ADDED } from './queries'
 import Authors from './components/Authors'
 import Books from './components/Books'
@@ -17,20 +16,10 @@ const App = () => {
   const token = useToken()
   const logoutUser = useLogout()
 
-
   const response = useQuery(ME, {
     skip: !token
   })
 
- useSubscription(BOOK_ADDED, {
-  onData: ({ data }) => {
-    notify(`New Book ${data.data.bookAdded.title} by ${data.data.bookAdded.author.name}  added!`)
-  },
-  onError: (error) => {
-    notify('WebSocket Error')
-    console.error(error)
-  },
-})
 
 
   if (token && response.loading) {
